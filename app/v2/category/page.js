@@ -26,6 +26,7 @@ export default function Home() {
     { field: "name", headerName: "Category Name", width: 150 },
     // { field: 'col2', headerName: 'Column 2', width: 150 },
   ];
+  const [rows, setRows] = useState([]);
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL;
   console.log(`${API_BASE}/category`);
@@ -43,6 +44,13 @@ export default function Home() {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
+  async function fetchCategory() {
+    const res = await fetch(`${API_BASE}/category`, { cache: "no-store" });
+    const data = await res.json();
+    // give DataGrid an 'id' field, immutably
+    setRows(data.map((c) => ({ ...c, id: c._id })));
+  }
+  
   useEffect(() => {
     fetchCategory();
   }, []);

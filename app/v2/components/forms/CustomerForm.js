@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
-import { BASE } from "@/app/v2/_base";
 
 export default function CustomerForm({ initial = null, onSaved }) {
+    const APIBASE = process.env.NEXT_PUBLIC_API_URL; // e.g. "/fin-customer/api"
     const [form, setForm] = useState({
         name: initial?.name ?? "",
         dateOfBirth: initial?.dateOfBirth ? initial.dateOfBirth.slice(0, 10) : "",
@@ -11,37 +11,30 @@ export default function CustomerForm({ initial = null, onSaved }) {
     });
     const [saving, setSaving] = useState(false);
 
-    const update = (k) => (e) =>
-        setForm((f) => ({ ...f, [k]: e.target.value }));
+    const update = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
-    const save = async (e) => {
+    const submit = async (e) => {
         e.preventDefault();
         setSaving(true);
 
         const payload = {
-            ...form,
-            memberNumber: Number(form.memberNumber),
+            name: form.name,
+            dateOfBirth: form.dateOfBirth,                  // "YYYY-MM-DD"
+            memberNumber: Number(form.memberNumber),        // ensure number
+            interests: form.interests || "",
         };
 
-        let res;
-        if (initial?._id) {
-            // teacher's style: PUT with _id in body
-            res = await fetch(`${BASE}/api/customer`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ _id: initial._id, ...payload }),
-            });
-        } else {
-            res = await fetch(`${BASE}/api/customer`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-        }
+        // Teacher’s style: POST to create (singular). If your API folder is plural, change to `${APIBASE}/customers`.
+        const res = await fetch(`${APIBASE}/customer`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
 
         setSaving(false);
         if (!res.ok) {
-            alert("Save failed");
+            const msg = await res.text().catch(() => "");
+            alert(`Save failed: ${res.status} ${msg}`);
             return;
         }
         const data = await res.json();
@@ -49,7 +42,7 @@ export default function CustomerForm({ initial = null, onSaved }) {
     };
 
     return (
-        <form onSubmit={save} style={{ display: "grid", gap: 12, maxWidth: 420 }}>
+        <form onSubmit={submit} style={{ display: "grid", gap: 12, maxWidth: 420 }}>
             <input placeholder="Name" value={form.name} onChange={update("name")} required />
             <input type="date" value={form.dateOfBirth} onChange={update("dateOfBirth")} required />
             <input type="number" placeholder="Member Number" value={form.memberNumber} onChange={update("memberNumber")} required />

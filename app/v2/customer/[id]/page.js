@@ -1,7 +1,7 @@
 export default async function Home({ params }) {
     const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+    const data = await fetch(`${API_BASE}/customer/${params.id}`, { cache: "no-store" }); // or /customers if plural
 
-    const data = await fetch(`${API_BASE}/customer/${params.id}`, { cache: "no-store" });
     if (!data.ok) {
         return (
             <div className="m-4">
@@ -10,8 +10,8 @@ export default async function Home({ params }) {
             </div>
         );
     }
-    const customer = await data.json();
 
+    const customer = await data.json();
     return (
         <div className="m-4">
             <h1>Customer</h1>
